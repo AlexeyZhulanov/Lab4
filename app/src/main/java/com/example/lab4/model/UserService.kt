@@ -1,20 +1,20 @@
 package com.example.lab4.model
 
-import android.util.Log
 import com.example.lab4.room.UserDao
 import com.example.lab4.room.UserDbEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class UserService(
-    private val userDao: UserDao
+    private val userDao: UserDao,
+    private val logger: Logger
 ) : UserRepository {
     override suspend fun registerUser(user: User): Boolean = withContext(Dispatchers.IO) {
         return@withContext try {
             userDao.registerUser(UserDbEntity.fromUserInput(user))
             true
         } catch (e: Exception) {
-            //Log.e("RegisterUserDbException", e.message.toString())
+            logger.e("RegisterUserDbException", e.message.toString())
             false
         }
     }
@@ -27,7 +27,7 @@ class UserService(
         try {
             userDao.updateUser(UserDbEntity.fromUserInput(user))
         } catch (e: Exception) {
-            Log.e("UpdateUserDbException", e.message.toString())
+            logger.e("UpdateUserDbException", e.message.toString())
         }
     }
 
@@ -35,7 +35,7 @@ class UserService(
         try {
             userDao.deleteUser(UserDbEntity.fromUserInput(user))
         } catch (e:Exception) {
-            Log.e("DeleteUserDbException", e.message.toString())
+            logger.e("DeleteUserDbException", e.message.toString())
         }
     }
 }

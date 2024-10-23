@@ -2,6 +2,8 @@ package com.example.lab4.di
 
 import android.content.Context
 import androidx.room.Room
+import com.example.lab4.model.AndroidLogger
+import com.example.lab4.model.Logger
 import com.example.lab4.model.UserService
 import com.example.lab4.room.AppDatabase
 import com.example.lab4.room.UserDao
@@ -33,7 +35,11 @@ object LabModule {
 
     @Provides
     @Singleton
-    fun provideUserService(userDao: UserDao) : UserService {
-        return UserService(userDao)
+    fun provideUserService(userDao: UserDao, logger: Logger) : UserService {
+        return UserService(userDao, logger)
     }
+
+    @Provides
+    @Singleton
+    fun provideLogger(): Logger = AndroidLogger()
 }
