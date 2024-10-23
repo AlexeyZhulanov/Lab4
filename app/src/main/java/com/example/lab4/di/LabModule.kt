@@ -24,7 +24,7 @@ object LabModule {
             appContext,
             AppDatabase::class.java,
             "database.db"
-        ).build()
+        ).createFromAsset("init_db_lab4.db").build()
     }
 
     @Provides
