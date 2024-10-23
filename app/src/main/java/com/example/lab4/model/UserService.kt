@@ -9,12 +9,12 @@ import kotlinx.coroutines.withContext
 class UserService(
     private val userDao: UserDao
 ) : UserRepository {
-    override suspend fun registerUser(user: User) = withContext(Dispatchers.IO) {
+    override suspend fun registerUser(user: User): Boolean = withContext(Dispatchers.IO) {
         return@withContext try {
             userDao.registerUser(UserDbEntity.fromUserInput(user))
             true
         } catch (e: Exception) {
-            Log.e("RegisterUserDbException", e.message.toString())
+            //Log.e("RegisterUserDbException", e.message.toString())
             false
         }
     }

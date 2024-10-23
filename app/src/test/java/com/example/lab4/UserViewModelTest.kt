@@ -47,7 +47,7 @@ class UserViewModelTest {
     fun `registerUser should return false on registration failure`() = runTest {
         // Arrange
         val user = User(0,"login", "password", "Alexey")
-        coEvery { userDao.registerUser(any()) } throws Exception("Database error")
+        coEvery { userDao.registerUser(any()) } throws Exception()
 
         // Act
         val result = userViewModel.registerUser(user)
