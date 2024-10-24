@@ -5,6 +5,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("kotlin-parcelize")
     id("dagger.hilt.android.plugin")
+    id("org.jetbrains.kotlinx.kover") version "0.5.0"
 }
 
 android {
@@ -91,6 +92,11 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
+
+tasks.withType<Test> {
+    finalizedBy(tasks.named("koverReport"))
+}
+
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
