@@ -75,7 +75,7 @@ jobs:
           cp -r app/build/reports/kover/project-html coverage-reports/
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: kover-report
           path: coverage-reports/project-html
