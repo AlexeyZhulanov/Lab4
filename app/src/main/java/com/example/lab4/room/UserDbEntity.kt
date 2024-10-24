@@ -8,7 +8,7 @@ import com.example.lab4.model.User
 @Entity(
     tableName = "users",
     indices = [
-        Index("username", unique = true)
+        Index("login", unique = true)
     ]
 )
 data class UserDbEntity(

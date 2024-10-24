@@ -8,28 +8,42 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.example.lab4.databinding.FragmentLoginBinding
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class LoginFragment : Fragment() {
-    private lateinit var binding: FragmentLoginBinding
+    lateinit var binding: FragmentLoginBinding
     private val viewModel: UserViewModel by viewModels()
+    private val job = Job()
+    private val uiScope = CoroutineScope(Dispatchers.Main + job)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         binding = FragmentLoginBinding.inflate(inflater, container, false)
         binding.errorTextView.visibility = View.INVISIBLE
         binding.loginButton.setOnClickListener {
-            if (validateInputs()) {
+            val (first, second) = validateInputs(binding.login.text.toString(), binding.password.text.toString())
+            if (first) {
+                binding.errorTextView.visibility = View.GONE
                 val login = binding.login.text.toString()
                 val password = binding.password.text.toString()
                 // val remember = binding.rememberSwitch.isChecked
-                viewModel.loginUser(login, password, { username ->
-                    parentFragmentManager.beginTransaction()
-                        .replace(R.id.fragmentContainer, SuccessFragment(username), "SUCCESS_FRAGMENT_TAG")
-                        .commit()
-                }, { errorMessage ->
-                    binding.errorTextView.text = errorMessage
-                    binding.errorTextView.visibility = View.VISIBLE
-                })
+                uiScope.launch {
+                    val answer = viewModel.loginUser(login, password)
+                    if(answer != null) {
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragmentContainer, SuccessFragment(answer), "SUCCESS_FRAGMENT_TAG")
+                            .commit()
+                    } else {
+                        binding.errorTextView.text = "Ошибка: Неверный логин или пароль"
+                        binding.errorTextView.visibility = View.VISIBLE
+                    }
+                }
+            } else {
+                binding.errorTextView.text = second
+                binding.errorTextView.visibility = View.VISIBLE
             }
         }
         binding.signupText.setOnClickListener {
@@ -42,17 +56,15 @@ class LoginFragment : Fragment() {
         return binding.root
     }
 
-    private fun validateInputs(): Boolean {
+    fun validateInputs(login: String, password: String): Pair<Boolean, String> {
         return when {
-            binding.login.text.isEmpty() -> {
-                binding.errorTextView.text = "Ошибка: Пустая строка логина"
-                false
+            login.isEmpty() -> {
+                Pair(false, "Ошибка: Пустая строка логина")
             }
-            binding.password.text.isEmpty() -> {
-                binding.errorTextView.text = "Ошибка: Пустая строка пароля"
-                false
+            password.isEmpty() -> {
+                Pair(false, "Ошибка: Пустая строка пароля")
             }
-            else -> true
-        }.also { binding.errorTextView.visibility = if (it) View.INVISIBLE else View.VISIBLE }
+            else -> Pair(true, "")
+        }
     }
 }

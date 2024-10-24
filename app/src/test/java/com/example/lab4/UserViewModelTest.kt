@@ -13,11 +13,17 @@ import org.junit.Test
 import com.example.lab4.model.UserService
 import com.example.lab4.room.UserDao
 import com.example.lab4.model.User
+import com.example.lab4.room.UserDbEntity
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 
-// TDD Register test
 class UserViewModelTest {
 
     @get:Rule
@@ -40,7 +46,7 @@ class UserViewModelTest {
     @Test
     fun `registerUser should return true on successful registration`() = runTest {
         // Arrange
-        val user = User(0,"login", "password", "Alexey")
+        val user = User(0,"login", "password", "test")
         coEvery { userDao.registerUser(any()) } returns Unit
 
         // Act
@@ -55,7 +61,7 @@ class UserViewModelTest {
     fun `registerUser should return false on registration failure`() = runTest {
         // Arrange
         val user = User(0,"login", "password", "Alexey")
-        coEvery { userDao.registerUser(any()) } throws Exception()
+        coEvery { userDao.registerUser(any()) } throws Exception("Username already exists")
 
         // Act
         val result = userViewModel.registerUser(user)
@@ -64,4 +70,62 @@ class UserViewModelTest {
         assertFalse(result)
         coVerify { userDao.registerUser(any()) }
     }
+
+    @Test
+    fun `loginUser should return username on successful login`() = runTest {
+        // Arrange
+        val login = "testLogin"
+        val password = "testPassword"
+        val user = User(0, login, password, "Alexey")
+        coEvery { userDao.loginUser(login, password) } returns UserDbEntity.fromUserInput(user)
+
+        // Act
+        val result = userViewModel.loginUser(login, password)
+
+        // Assert
+        assertEquals("Alexey", result)
+        coVerify { userDao.loginUser(login, password) }
+    }
+
+    @Test
+    fun `loginUser should return null on login failure`() = runTest {
+        // Arrange
+        val login = "testLogin"
+        val password = "testPassword"
+        coEvery { userDao.loginUser(login, password) } returns null
+
+        // Act
+        val result = userViewModel.loginUser(login, password)
+
+        // Assert
+        assertNull(result)
+        coVerify { userDao.loginUser(login, password) }
+    }
+
+    @Test
+    fun `updateUser should call updateUser in userService`() = runTest {
+        // Arrange
+        val user = User(0, "testLogin", "testPassword", "Alexey")
+        coEvery { userDao.updateUser(any()) } just Runs
+
+        // Act
+        userViewModel.updateUser(user)
+
+        // Assert
+        coVerify { userDao.updateUser(UserDbEntity.fromUserInput(user)) }
+    }
+
+    @Test
+    fun `deleteUser should call deleteUser in userService`() = runTest {
+        // Arrange
+        val user = User(0, "testLogin", "testPassword", "Alexey")
+        coEvery { userDao.deleteUser(any()) } just Runs
+
+        // Act
+        userViewModel.deleteUser(user)
+
+        // Assert
+        coVerify { userDao.deleteUser(UserDbEntity.fromUserInput(user)) }
+    }
+
 }

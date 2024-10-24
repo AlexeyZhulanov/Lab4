@@ -13,15 +13,21 @@ import androidx.fragment.app.Fragment
 import com.example.lab4.databinding.FragmentRegisterBinding
 import com.example.lab4.model.User
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class RegisterFragment(
     private val viewModel: UserViewModel
 ) : Fragment() {
-    private lateinit var binding: FragmentRegisterBinding
+    lateinit var binding: FragmentRegisterBinding
     private lateinit var drawableStart : Drawable
     private lateinit var drawableEnd : Drawable
     private val alf = ('a'..'z') + ('A'..'Z') + ('0'..'9') + ('!') + ('$')
+    private val job = Job()
+    private val uiScope = CoroutineScope(Dispatchers.Main + job)
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         binding = FragmentRegisterBinding.inflate(inflater, container, false)
@@ -29,20 +35,29 @@ class RegisterFragment(
         drawableEnd = ContextCompat.getDrawable(requireContext(), R.drawable.ic_check_two)!!
         binding.errorTextView.visibility = View.INVISIBLE
         binding.registerButton.setOnClickListener {
-            if (validateInputs()) {
+            val (first, second) = validateInputs(binding.login.text.toString(), binding.username.text.toString(),
+                binding.password.text.toString(), binding.passwordRepeat.text.toString())
+            if (first) {
+                binding.errorTextView.visibility = View.GONE
                 val login = binding.login.text.toString()
                 val username = binding.username.text.toString()
                 val password = binding.password.text.toString()
                 val user = User(0, login, password, username)
-                viewModel.registerUser(user, {
-                    parentFragmentManager.beginTransaction()
-                        .replace(R.id.fragmentContainer, LoginFragment(), "LOGIN_FRAGMENT_TAG2")
-                        .addToBackStack(null)
-                        .commit()
-                }, { errorMessage ->
-                    binding.errorTextView.text = errorMessage
-                    binding.errorTextView.visibility = View.VISIBLE
-                })
+                uiScope.launch {
+                    val flag = viewModel.registerUser(user)
+                    if(flag) {
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragmentContainer, LoginFragment(), "LOGIN_FRAGMENT_TAG2")
+                            .addToBackStack(null)
+                            .commit()
+                    } else {
+                        binding.errorTextView.text = "Ошибка: Имя пользователя уже занято"
+                        binding.errorTextView.visibility = View.VISIBLE
+                    }
+                }
+            } else {
+                binding.errorTextView.text = second
+                binding.errorTextView.visibility = View.VISIBLE
             }
         }
         binding.signupText.setOnClickListener {
@@ -95,49 +110,31 @@ class RegisterFragment(
         return binding.root
     }
 
-    private fun validateInputs(): Boolean {
+    fun validateInputs(login: String, username: String, password: String, passwordRepeat: String): Pair<Boolean, String> {
         return when {
-            binding.login.text.isEmpty() -> {
-                binding.errorTextView.text = "Ошибка: Пустая строка логина"
-                false
-            }
-            binding.username.text.isEmpty() -> {
-                binding.errorTextView.text = "Ошибка: Пустая строка имени пользователя"
-                false
-            }
-            binding.password.text.isEmpty() -> {
-                binding.errorTextView.text = "Ошибка: Пустая строка пароля"
-                false
-            }
-            binding.passwordRepeat.text.isEmpty() -> {
-                binding.errorTextView.text = "Ошибка: Пустая строка повтора пароля"
-                false
-            }
-            binding.password.text.toString() != binding.passwordRepeat.text.toString() -> {
-                binding.errorTextView.text = "Ошибка: Пароли не совпадают"
-                false
-            }
-            isInvalid(binding.login.text.toString()) -> {
-                binding.errorTextView.text = "Ошибка: Недопустимые символы в первой строке"
-                false
-            }
-            isInvalid(binding.username.text.toString()) -> {
-                binding.errorTextView.text = "Ошибка: Недопустимые символы во второй строке"
-                false
-            }
-            isInvalid(binding.password.text.toString()) -> {
-                binding.errorTextView.text = "Ошибка: Недопустимые символы в третьей строке"
-                false
-            }
-            isInvalid(binding.passwordRepeat.text.toString()) -> {
-                binding.errorTextView.text = "Ошибка: Недопустимые символы в четвертой строке"
-                false
-            }
-            else -> true
-        }.also { binding.errorTextView.visibility = if (it) View.INVISIBLE else View.VISIBLE }
+            login.isEmpty() -> Pair(false, "Ошибка: Пустая строка логина")
+
+            username.isEmpty() -> Pair(false, "Ошибка: Пустая строка имени пользователя")
+
+            password.isEmpty() -> Pair(false, "Ошибка: Пустая строка пароля")
+
+            passwordRepeat.isEmpty() -> Pair(false, "Ошибка: Пустая строка повтора пароля")
+
+            password != passwordRepeat -> Pair(false, "Ошибка: Пароли не совпадают")
+
+            isInvalid(login) -> Pair(false, "Ошибка: Недопустимые символы в первой строке")
+
+            isInvalid(username) -> Pair(false, "Ошибка: Недопустимые символы во второй строке")
+
+            isInvalid(password) -> Pair(false, "Ошибка: Недопустимые символы в третьей строке")
+
+            isInvalid(passwordRepeat) -> Pair(false, "Ошибка: Недопустимые символы в четвертой строке")
+
+            else -> Pair(true, "")
+        }
     }
 
-    private fun isInvalid(text: String): Boolean {
+    fun isInvalid(text: String): Boolean {
         text.forEach {
             if(it !in alf) return true
         }

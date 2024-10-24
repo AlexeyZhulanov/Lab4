@@ -15,19 +15,13 @@ class UserViewModel @Inject constructor(
     private val userService: UserService
 ) : ViewModel() {
 
-    fun registerUser(user: User, onSuccess: () -> Unit, onError: (String) -> Unit) {
-        viewModelScope.launch {
-            val flag = userService.registerUser(user)
-            if(flag) onSuccess() else onError("Ошибка: Имя пользователя уже занято")
-        }
+    suspend fun registerUser(user: User) : Boolean = withContext(Dispatchers.IO) {
+        return@withContext userService.registerUser(user)
     }
 
-    fun loginUser(login: String, password: String, onSuccess: (String) -> Unit, onError: (String) -> Unit) {
-        viewModelScope.launch {
-            val user = userService.loginUser(login, password)
-            if(user != null) onSuccess(user.username)
-            else onError("Ошибка: Неверный логин или пароль")
-        }
+    suspend fun loginUser(login: String, password: String) : String? = withContext(Dispatchers.IO) {
+        val user = userService.loginUser(login, password)
+        return@withContext user?.username
     }
 
     suspend fun updateUser(user: User) = withContext(Dispatchers.IO) {
