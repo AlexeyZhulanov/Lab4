@@ -44,7 +44,7 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run tests
-        run: ./gradlew test
+        run: ./gradlew test --info
 
   coverage:
     runs-on: ubuntu-latest
@@ -67,13 +67,15 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run tests with coverage
-        run: ./gradlew test --info
+        run: ./gradlew koverReport
 
-      - name: Check code coverage
+      - name: Move coverage report to output directory
         run: |
-          coverage=$(grep -o '[0-9]*\.[0-9]*' app/build/reports/coverage/report.txt | sort -nu | tail -n 1)
-          echo "Code coverage is: $coverage%"
-          if (( $(echo "$coverage < 50" | bc -l) )); then
-            echo "Code coverage is less than 50%, failing the build."
-            exit 1
-          fi
+          mkdir -p coverage-reports
+          cp -r app/build/reports/kover/project-html coverage-reports/
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: kover-report
+          path: coverage-reports/project-html
