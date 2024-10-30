@@ -114,9 +114,7 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
 }
 
 tasks.register("jacocoCoverageVerification", JacocoCoverageVerification::class) {
-    dependsOn(tasks.named("test"))
     dependsOn(tasks.named("jacocoTestReport"))
-    tasks.findByName("jacocoTestReport")?.mustRunAfter(tasks.named("test"))
 
     violationRules {
         rule {
