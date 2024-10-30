@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -5,7 +7,7 @@ plugins {
     id("com.google.devtools.ksp")
     id("kotlin-parcelize")
     id("dagger.hilt.android.plugin")
-    id("org.jetbrains.kotlinx.kover") version "0.5.0"
+    id("jacoco")
 }
 
 android {
@@ -94,7 +96,38 @@ dependencies {
 }
 
 tasks.withType<Test> {
-    finalizedBy(tasks.named("koverReport"))
+    finalizedBy("jacocoTestReport")
+}
+
+tasks.register("jacocoTestReport", JacocoReport::class) {
+    dependsOn("testDebugUnitTest") // Запуск тестов перед отчетом
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    // Простая настройка для классов и исходного кода
+    classDirectories.setFrom(
+        fileTree("$buildDir/tmp/kotlin-classes/debug") { include("**/*.class") }
+    )
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+    executionData.setFrom(files("$buildDir/jacoco/testDebugUnitTest.exec"))
+}
+
+tasks.register("jacocoCoverageVerification", JacocoCoverageVerification::class) {
+    dependsOn("jacocoTestReport")
+
+    violationRules {
+        rule {
+            element = "BUNDLE"
+
+            limit {
+                // Минимальный порог покрытия в процентах
+                minimum = "0.5".toBigDecimal() // 50%
+            }
+        }
+    }
 }
 
 java {
