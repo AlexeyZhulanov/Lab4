@@ -66,5 +66,8 @@ jobs:
       - name: Clean project
         run: ./gradlew clean
 
+      - name: Run tests
+        run: ./gradlew testDebugUnitTest --info || exit 1
+
       - name: Run JaCoCo Report
-        run: ./gradlew testDebugUnitTest jacocoTestReport jacocoCoverageVerification --console=plain
+        run: ./gradlew jacocoTestReport jacocoCoverageVerification --console=plain
