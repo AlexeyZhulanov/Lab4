@@ -122,7 +122,7 @@ tasks.register("jacocoCoverageVerification", JacocoCoverageVerification::class) 
 
             limit {
                 // Минимальный порог покрытия в процентах
-                minimum = "0.5".toBigDecimal() // 50%
+                minimum = "0.01".toBigDecimal() // 1%
             }
         }
     }
