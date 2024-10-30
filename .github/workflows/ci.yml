@@ -63,5 +63,8 @@ jobs:
       - name: Give execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Clean project
+        run: ./gradlew clean
+
       - name: Run JaCoCo Report
-        run: ./gradlew jacocoTestReport jacocoCoverageVerification --console=plain
+        run: ./gradlew testDebugUnitTest jacocoTestReport jacocoCoverageVerification --console=plain
