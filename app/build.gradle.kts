@@ -105,14 +105,18 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
 
     // Простая настройка для классов и исходного кода
     classDirectories.setFrom(
-        fileTree("$buildDir/tmp/kotlin-classes/debug") { include("**/*.class") }
+        fileTree("$buildDir/intermediates/javac/debug") {
+            include("**/*.class")
+        }
     )
     sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
     executionData.setFrom(files("$buildDir/jacoco/testDebugUnitTest.exec"))
 }
 
 tasks.register("jacocoCoverageVerification", JacocoCoverageVerification::class) {
+    dependsOn(tasks.named("test"))
     dependsOn(tasks.named("jacocoTestReport"))
+    tasks.findByName("jacocoTestReport")?.mustRunAfter(tasks.named("test"))
 
     violationRules {
         rule {
