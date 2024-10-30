@@ -54,9 +54,6 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Install bc
-        run: sudo apt-get install bc
-        
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
@@ -66,16 +63,5 @@ jobs:
       - name: Give execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Run tests with coverage
-        run: ./gradlew koverReport
-
-      - name: Move coverage report to output directory
-        run: |
-          mkdir -p coverage-reports
-          cp -r app/build/reports/kover/project-html coverage-reports/
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v3
-        with:
-          name: kover-report
-          path: coverage-reports/project-html
+      - name: Run JaCoCo Report
+        run: ./gradlew jacocoTestReport jacocoCoverageVerification --console=plain
