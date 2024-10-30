@@ -95,12 +95,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 }
 
-tasks.withType<Test> {
-    finalizedBy("jacocoTestReport")
-}
-
 tasks.register("jacocoTestReport", JacocoReport::class) {
-    dependsOn("testDebugUnitTest") // Запуск тестов перед отчетом
+    dependsOn(tasks.named("testDebugUnitTest")) // Запуск тестов перед отчетом
 
     reports {
         xml.required.set(true)
@@ -116,7 +112,7 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
 }
 
 tasks.register("jacocoCoverageVerification", JacocoCoverageVerification::class) {
-    dependsOn("jacocoTestReport")
+    dependsOn(tasks.named("jacocoTestReport"))
 
     violationRules {
         rule {
@@ -128,6 +124,10 @@ tasks.register("jacocoCoverageVerification", JacocoCoverageVerification::class) 
             }
         }
     }
+}
+
+tasks.withType<Test> {
+    finalizedBy(tasks.named("jacocoTestReport"))
 }
 
 java {
